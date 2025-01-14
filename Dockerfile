@@ -13,6 +13,9 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . .
 
+# Copy the .env file into the container
+COPY .env .env
+
 # Set environment variables (for non-sensitive data)
 ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 
@@ -20,8 +23,8 @@ ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 ENV PATH="/home/ytbotuser/.local/bin:${PATH}"
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip --root-user-action=ignore
+RUN pip install --no-cache-dir -r requirements.txt  --root-user-action=ignore
 
 # Change to the non-root user
 USER root
