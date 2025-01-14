@@ -5,6 +5,7 @@ apt-get update
 apt-get install -y ffmpeg cron
 
 # Install Python dependencies
+pip install --upgrade pip
 pip install --no-cache-dir -r requirements.txt
 
 # Add crontab file in the cron directory
