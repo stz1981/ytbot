@@ -20,6 +20,9 @@ ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Change to the non-root user
+USER root
+
 # Make the start_and_run.sh script executable
 RUN chmod +x ./setup_and_run.sh
 
