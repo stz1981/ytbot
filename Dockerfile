@@ -20,4 +20,4 @@ ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 RUN chmod +x ./start_and_run.sh
-CMD ./start_and_run.sh
+CMD ["sh", "./start_and_run.sh"]
