@@ -1,0 +1,2 @@
+0 0 * * * find /usr/src/app/Video -type f -mtime +30 -exec rm {} \;
+0 0 * * * find /usr/src/app/Audio -type f -mtime +30 -exec rm {} \;
