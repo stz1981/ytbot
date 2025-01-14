@@ -21,7 +21,7 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Make the start_and_run.sh script executable
-RUN chmod +x /app/setup_and_run.sh
+RUN chmod +x ./setup_and_run.sh
 
 # Use JSON array syntax for CMD
-CMD ["sh", "/app/setup_and_run.sh"]
+CMD ["sh", "./setup_and_run.sh"]
