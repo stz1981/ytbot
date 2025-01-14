@@ -1,4 +1,3 @@
-Dockerfile
 # Dockerfile example with improvements for clarity and best practices
 FROM python:3.11-slim
 
