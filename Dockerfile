@@ -16,6 +16,9 @@ COPY . .
 # Set environment variables (for non-sensitive data)
 ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 
+# Add local bin to PATH
+ENV PATH="/home/ytbotuser/.local/bin:${PATH}"
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
