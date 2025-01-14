@@ -12,5 +12,8 @@ ENV TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
 # Make the start_and_run.sh script executable
 RUN chmod +x ./setup_and_run.sh
 
+# Define volumes for Audio and Video directories
+VOLUME ["/app/Audio", "/app/Video"]
+
 # Use JSON array syntax for CMD
 CMD ["sh", "./setup_and_run.sh"]
