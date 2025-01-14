@@ -33,10 +33,7 @@ cd ytbot
 To start the bot as a Docker container, run the following command:
 
 ```bash
-docker run -d \
-  --name ytbot \
-  -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN \
-  talalzaki/ytbot:latest
+docker run -d --name ytbot -e TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN -v $(pwd)/Audio:/app/Audio -v $(pwd)/Video:/app/Video talalzaki/ytbot
 ```
 
 Make sure to replace `$TELEGRAM_BOT_TOKEN` with your actual token.
@@ -48,14 +45,16 @@ Make sure to replace `$TELEGRAM_BOT_TOKEN` with your actual token.
 Alternatively, you can use **Docker Compose** for easier management. Create a `docker-compose.yml` file with the following content:
 
 ```yaml
-version: "3.8"
-
+name: ytbot
 services:
-  ytbot:
-    container_name: ytbot
-    image: talalzaki/ytbot:latest
-    environment:
-      - TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+    ytbot:
+        container_name: ytbot
+        environment:
+            - TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+        volumes:
+            - $(pwd)/Audio:/app/Audio
+            - $(pwd)/Video:/app/Video
+        image: talalzaki/ytbot:latest
 ```
 
 Then, run the bot with:
