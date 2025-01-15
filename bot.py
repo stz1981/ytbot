@@ -28,9 +28,9 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     url = update.message.text
     context.user_data['url'] = url
     keyboard = [
-        [InlineKeyboardButton("Best (Video)", callback_data='best_video'), InlineKeyboardButton("4320p (8K)", callback_data='4320')],
-        [InlineKeyboardButton("2160p (4K)", callback_data='2160'), InlineKeyboardButton("1080p (FHD)", callback_data='1080')],
-        [InlineKeyboardButton("720p (HD)", callback_data='720'), InlineKeyboardButton("Best (Audio)", callback_data='best_audio')],
+        [InlineKeyboardButton("Best (Video)", callback_data='best_video'), InlineKeyboardButton("1080p (FHD)", callback_data='1080')],
+        [InlineKeyboardButton("720p (HD)", callback_data='720'), InlineKeyboardButton("480p (Mobile)", callback_data='480')],
+        [InlineKeyboardButton("320p (Worse)", callback_data='320'), InlineKeyboardButton("Best (Audio)", callback_data='best_audio')],
         [InlineKeyboardButton("320 kbps (Audio)", callback_data='320'), InlineKeyboardButton("256 kbps (Audio)", callback_data='256')],
         [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')]
     ]
@@ -49,7 +49,7 @@ async def button(update: Update, context: CallbackContext) -> None:
     quality = context.user_data['quality']
     save_path = './Video' if 'video' in quality else './Audio'
 
-    if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
+    if 'video' in quality or quality in ['1080', '720', '480', '320']:
         filename = download_video(url, save_path, quality.replace('best_video', 'best'))
     else:
         filename = download_audio(url, save_path, quality.replace('best_audio', 'best'))
@@ -62,10 +62,10 @@ async def button(update: Update, context: CallbackContext) -> None:
         else:
             # Send the file to the user
             with open(filename, 'rb') as file:
-                if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
-                    await query.message.reply_video(video=file, timeout=120)
+                if 'video' in quality or quality in ['1080', '720', '480', '320']:
+                    await query.message.reply_video(video=file, timeout=240)
                 else:
-                    await query.message.reply_audio(audio=file, timeout=120)
+                    await query.message.reply_audio(audio=file, timeout=240)
     else:
         await query.edit_message_text(text="There was an error processing your request.")
 
@@ -134,7 +134,7 @@ def main() -> None:
         return
 
     # Increase the timeout settings
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).read_timeout(360).write_timeout(360).build()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).read_timeout(240).write_timeout(240).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
