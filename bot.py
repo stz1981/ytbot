@@ -4,7 +4,7 @@ import subprocess
 import sys
 from yt_dlp import YoutubeDL
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext, Defaults
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
 
 # Enable logging
 logging.basicConfig(
@@ -49,7 +49,7 @@ async def button(update: Update, context: CallbackContext) -> None:
     quality = context.user_data['quality']
     save_path = './Video' if 'video' in quality else './Audio'
 
-    if 'video' in quality or quality in ['4320', '2160', '1440', '1080', '720']:
+    if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
         filename = download_video(url, save_path, quality.replace('best_video', 'best'))
     else:
         filename = download_audio(url, save_path, quality.replace('best_audio', 'best'))
@@ -62,10 +62,10 @@ async def button(update: Update, context: CallbackContext) -> None:
         else:
             # Send the file to the user
             with open(filename, 'rb') as file:
-                if 'video' in quality or quality in ['4320', '2160', '1440', '1080', '720']:
-                    await query.message.reply_video(video=file, timeout=360)
+                if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
+                    await query.message.reply_video(video=file, timeout=120)
                 else:
-                    await query.message.reply_audio(audio=file, timeout=3600)
+                    await query.message.reply_audio(audio=file, timeout=120)
     else:
         await query.edit_message_text(text="There was an error processing your request.")
 
@@ -134,9 +134,7 @@ def main() -> None:
         return
 
     # Increase the timeout settings
-    defaults = Defaults(timeout=120)  # Set the timeout to 120 seconds
-
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).defaults(defaults).build()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).read_timeout(360).write_timeout(360).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
