@@ -4,7 +4,7 @@ Welcome to **ytbot**, a Telegram bot that makes downloading videos and audio fro
 
 ## 🌟 Features
 
-- **Video Downloads**: Supports resolutions like 8K, UHD, 4K, Full HD, HD, and more.
+- **Video Downloads**: Supports resolutions like 8K, UHD, 4K, Full HD, HD, and more **(Telegram has a maximum file size limit of 50 MB for regular users and 200 MB for Telegram Premium users)**, You are welcome to visit my site: **https://utube.bayt.cc** to download bigger sizes.
 - **Audio Downloads**: Choose from various bitrates including 320 kbps, 256 kbps, 160 kbps, and 128 kbps.
 - **User-Friendly**: Simple and efficient—just share a link, select options, and you're done!
 
