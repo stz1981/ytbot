@@ -29,10 +29,11 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     context.user_data['url'] = url
     keyboard = [
         [InlineKeyboardButton("Best (Video)", callback_data='best_video'), InlineKeyboardButton("4320p (8K)", callback_data='4320')],
-        [InlineKeyboardButton("2160p (4K)", callback_data='2160'), InlineKeyboardButton("1080p (FHD)", callback_data='1080')],
-        [InlineKeyboardButton("720p (HD)", callback_data='720'), InlineKeyboardButton("Best (Audio)", callback_data='best_audio')],
+        [InlineKeyboardButton("2160p (UHD)", callback_data='2160'), InlineKeyboardButton("1440p (4K)", callback_data='1440')],
+        [InlineKeyboardButton("1080p (FHD)", callback_data='1080'), InlineKeyboardButton("720p (HD)", callback_data='720')],
         [InlineKeyboardButton("320 kbps (Audio)", callback_data='320'), InlineKeyboardButton("256 kbps (Audio)", callback_data='256')],
-        [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')]
+        [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')],
+        [InlineKeyboardButton("Best (Audio)", callback_data='best_audio')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('Choose the quality:', reply_markup=reply_markup)
