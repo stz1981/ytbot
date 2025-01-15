@@ -3,9 +3,8 @@ import os
 import subprocess
 import sys
 from yt_dlp import YoutubeDL
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
-import shutil
 
 # Enable logging
 logging.basicConfig(
@@ -20,130 +19,123 @@ if not TELEGRAM_BOT_TOKEN:
     logger.error("TELEGRAM_BOT_TOKEN environment variable not set.")
     sys.exit(1)
 
-# Define constants for quality options
-VIDEO_QUALITIES = [
-    ("Best (Video)", "best_video"),
-    ("4320p (8K)", "4320"),
-    ("2160p (UHD)", "2160"),
-    ("1440p (4K)", "1440"),
-    ("1080p (FHD)", "1080"),
-    ("720p (HD)", "720"),
-]
-AUDIO_QUALITIES = [
-    ("Best (Audio)", "best_audio"),
-    ("320 kbps (Audio)", "320"),
-    ("256 kbps (Audio)", "256"),
-    ("160 kbps (Audio)", "160"),
-    ("128 kbps (Audio)", "128"),
-]
-
-# Start command handler
+# Define the start command handler
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text("Welcome! Please send me a YouTube URL.")
+    await update.message.reply_text('Welcome! Please send me the YouTube URL.')
 
-# Handle URL input
+# Define the message handler for YouTube URL
 async def handle_message(update: Update, context: CallbackContext) -> None:
-    url = update.message.text.strip()
-    context.user_data["url"] = url
+    url = update.message.text
+    context.user_data['url'] = url
     keyboard = [
-        [InlineKeyboardButton(label, callback_data=quality)]
-        for label, quality in VIDEO_QUALITIES + AUDIO_QUALITIES
+        [InlineKeyboardButton("Best (Video)", callback_data='best_video'), InlineKeyboardButton("4320p (8K)", callback_data='4320')],
+        [InlineKeyboardButton("2160p (4K)", callback_data='2160'), InlineKeyboardButton("1080p (FHD)", callback_data='1080')],
+        [InlineKeyboardButton("720p (HD)", callback_data='720'), InlineKeyboardButton("Best (Audio)", callback_data='best_audio')],
+        [InlineKeyboardButton("320 kbps (Audio)", callback_data='320'), InlineKeyboardButton("256 kbps (Audio)", callback_data='256')],
+        [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Choose the quality:", reply_markup=reply_markup)
+    await update.message.reply_text('Choose the quality:', reply_markup=reply_markup)
 
-# Callback for quality selection
+# Define the callback query handler for quality selection
 async def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
-    quality = query.data
-    context.user_data["quality"] = quality
-    url = context.user_data["url"]
-    save_path = "./Video" if "video" in quality else "./Audio"
-    os.makedirs(save_path, exist_ok=True)
+    context.user_data['quality'] = query.data
+    await query.edit_message_text(text="Processing your request...")
 
-    await query.edit_message_text(text="Downloading your file, please wait...")
+    # Interact with your existing script
+    url = context.user_data['url']
+    quality = context.user_data['quality']
+    save_path = './Video' if 'video' in quality else './Audio'
 
-    try:
-        if "video" in quality or quality.isdigit():
-            filename = download_video(url, save_path, quality.replace("best_video", "best"))
-        else:
-            filename = download_audio(url, save_path, quality.replace("best_audio", "best"))
+    if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
+        filename = download_video(url, save_path, quality.replace('best_video', 'best'))
+    else:
+        filename = download_audio(url, save_path, quality.replace('best_audio', 'best'))
 
-        if filename and os.path.exists(filename):
-            with open(filename, "rb") as file:
-                if "video" in quality or quality.isdigit():
-                    await query.message.reply_video(video=file)
-                else:
-                    await query.message.reply_audio(audio=file)
-            os.remove(filename)
-        else:
-            await query.edit_message_text("Failed to download the requested file.")
-    except Exception as e:
-        logger.error(f"Error processing request: {e}")
-        await query.edit_message_text("An error occurred. Please try again.")
+    if filename:
+        # Send the file to the user
+        with open(filename, 'rb') as file:
+            if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
+                await query.message.reply_video(video=file)
+            else:
+                await query.message.reply_audio(audio=file)
+    else:
+        await query.edit_message_text(text="There was an error processing your request.")
 
-# Check for ffmpeg
 def check_ffmpeg():
-    if not shutil.which("ffmpeg"):
-        logger.error("ffmpeg not found. Please install ffmpeg.")
+    ffmpeg_path = '/usr/bin/ffmpeg'
+    if not os.path.exists(ffmpeg_path):
+        print("Error: ffmpeg not found")
         return False
     return True
 
-# Update libraries
 def check_updates():
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "ffmpeg"])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'yt-dlp'])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--upgrade', 'ffmpeg'])
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error updating libraries: {e}")
+        print(f"Error updating libraries: {e}")
         return False
     return True
 
-# Video download
 def download_video(url, save_path, quality):
     ydl_opts = {
-        "format": f"bestvideo[height<={quality}]+bestaudio/best" if quality != "best" else "bestvideo+bestaudio/best",
-        "outtmpl": os.path.join(save_path, "%(title)s.%(ext)s"),
-        "ffmpeg_location": shutil.which("ffmpeg"),
+        'format': f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]' if quality != 'best' else 'bestvideo+bestaudio/best',
+        'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s'),
+        'ffmpeg_location': '/usr/bin/ffmpeg',  # Default location for ffmpeg in the container
+        'postprocessors': [{
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': 'mp4',
+        }],
     }
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
+    with YoutubeDL(ydl_opts) as ydl:
+        try:
             info_dict = ydl.extract_info(url, download=True)
-            return ydl.prepare_filename(info_dict).replace(".webm", ".mp4")
-    except Exception as e:
-        logger.error(f"Error downloading video: {e}")
-        return None
+        except TypeError as e:
+            if 'float_or_none() missing 1 required positional argument: \'v\'' in str(e):
+                def float_or_none_wrapper(v, scale=None):
+                    try:
+                        return float(v) * scale if scale else float(v)
+                    except (TypeError, ValueError):
+                        return None
+                info_dict = ydl.extract_info(url, download=True, float_or_none=float_or_none_wrapper)
+            else:
+                raise e
+        return ydl.prepare_filename(info_dict).replace('.webm', '.mp4')
 
-# Audio download
 def download_audio(url, save_path, bitrate):
     ydl_opts = {
-        "format": "bestaudio/best" if bitrate == "best" else f"bestaudio[abr<={bitrate}]",
-        "outtmpl": os.path.join(save_path, "%(title)s.%(ext)s"),
-        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": bitrate}],
-        "ffmpeg_location": shutil.which("ffmpeg"),
+        'format': 'bestaudio/best' if bitrate == 'best' else f'bestaudio[abr<={bitrate}]',
+        'outtmpl': os.path.join(save_path, '%(title)s.%(ext)s'),
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': bitrate,
+        }],
+        'ffmpeg_location': '/usr/bin/ffmpeg'  # Default location for ffmpeg in the container
     }
-    try:
-        with YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
-            return ydl.prepare_filename(info_dict).replace(".webm", ".mp3")
-    except Exception as e:
-        logger.error(f"Error downloading audio: {e}")
-        return None
+    with YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        return ydl.prepare_filename(info_dict).replace('.webm', '.mp3')
 
-# Main
 def main() -> None:
+    # Check if ffmpeg and updates are available
     if not check_ffmpeg():
-        sys.exit(1)
+        return
+
     if not check_updates():
-        sys.exit(1)
+        return
 
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_handler(CallbackQueryHandler(button))
+    # Replace 'YOUR_TOKEN' with your actual bot token
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    app.run_polling()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(CallbackQueryHandler(button))
 
-if __name__ == "__main__":
+    application.run_polling()
+
+if __name__ == '__main__':
     main()
