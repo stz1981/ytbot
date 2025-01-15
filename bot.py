@@ -63,9 +63,9 @@ async def button(update: Update, context: CallbackContext) -> None:
             # Send the file to the user
             with open(filename, 'rb') as file:
                 if 'video' in quality or quality in ['1080', '720', '480', '320']:
-                    await query.message.reply_video(video=file, timeout=240)
+                    await query.message.reply_video(video=file)
                 else:
-                    await query.message.reply_audio(audio=file, timeout=240)
+                    await query.message.reply_audio(audio=file)
     else:
         await query.edit_message_text(text="There was an error processing your request.")
 
