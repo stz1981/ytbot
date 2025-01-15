@@ -4,7 +4,7 @@ import subprocess
 import sys
 from yt_dlp import YoutubeDL
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext, Defaults
 
 # Enable logging
 logging.basicConfig(
@@ -29,11 +29,10 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     context.user_data['url'] = url
     keyboard = [
         [InlineKeyboardButton("Best (Video)", callback_data='best_video'), InlineKeyboardButton("4320p (8K)", callback_data='4320')],
-        [InlineKeyboardButton("2160p (UHD)", callback_data='2160'), InlineKeyboardButton("1440p (4K)", callback_data='1440')],
-        [InlineKeyboardButton("1080p (FHD)", callback_data='1080'), InlineKeyboardButton("720p (HD)", callback_data='720')],
+        [InlineKeyboardButton("2160p (4K)", callback_data='2160'), InlineKeyboardButton("1080p (FHD)", callback_data='1080')],
+        [InlineKeyboardButton("720p (HD)", callback_data='720'), InlineKeyboardButton("Best (Audio)", callback_data='best_audio')],
         [InlineKeyboardButton("320 kbps (Audio)", callback_data='320'), InlineKeyboardButton("256 kbps (Audio)", callback_data='256')],
-        [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')],
-        [InlineKeyboardButton("Best (Audio)", callback_data='best_audio')]
+        [InlineKeyboardButton("160 kbps (Audio)", callback_data='160'), InlineKeyboardButton("128 kbps (Audio)", callback_data='128')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('Choose the quality:', reply_markup=reply_markup)
@@ -50,18 +49,23 @@ async def button(update: Update, context: CallbackContext) -> None:
     quality = context.user_data['quality']
     save_path = './Video' if 'video' in quality else './Audio'
 
-    if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
+    if 'video' in quality or quality in ['4320', '2160', '1440', '1080', '720']:
         filename = download_video(url, save_path, quality.replace('best_video', 'best'))
     else:
         filename = download_audio(url, save_path, quality.replace('best_audio', 'best'))
 
     if filename:
-        # Send the file to the user
-        with open(filename, 'rb') as file:
-            if 'video' in quality or quality in ['4320', '2160', '1080', '720']:
-                await query.message.reply_video(video=file)
-            else:
-                await query.message.reply_audio(audio=file)
+        # Check file size
+        file_size = os.path.getsize(filename)
+        if file_size > 50 * 1024 * 1024:  # 50 MB
+            await query.edit_message_text(text="The file you requested is larger than 50 MB. Please try a lower resolution, or visit my site: https://utube.bayt.cc to download from there")
+        else:
+            # Send the file to the user
+            with open(filename, 'rb') as file:
+                if 'video' in quality or quality in ['4320', '2160', '1440', '1080', '720']:
+                    await query.message.reply_video(video=file, timeout=360)
+                else:
+                    await query.message.reply_audio(audio=file, timeout=3600)
     else:
         await query.edit_message_text(text="There was an error processing your request.")
 
@@ -129,8 +133,10 @@ def main() -> None:
     if not check_updates():
         return
 
-    # Replace 'YOUR_TOKEN' with your actual bot token
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    # Increase the timeout settings
+    defaults = Defaults(timeout=120)  # Set the timeout to 120 seconds
+
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).defaults(defaults).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
